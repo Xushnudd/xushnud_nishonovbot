@@ -1,14 +1,16 @@
 import os
 
 from dotenv import load_dotenv
-from telebot import TeleBot
+from flask import Flask, request
+from telebot import TeleBot, types
 
 load_dotenv()
 
 token = os.getenv("BOT_TOKEN")
 admin = os.getenv("ADMIN")
 
-bot = TeleBot(token)
+app = Flask(__name__)
+bot = TeleBot(token, threaded=False)
 
 # start the conversation
 @bot.message_handler(commands=['start'])
@@ -51,4 +53,11 @@ def messages(m):
             text="Xabaringiz adminga yuboildi. Tez orada javob olasiz !"
         )
     
-bot.infinity_polling()
+@app.route("/", methods=['POST'])
+def home():
+    update = types.Update.de_json(request.get_data().decode('utf-8'))
+    bot.process_new_updates([update])
+    return "ok", 200
+
+if __name__ == "__main__":
+    app.run()
